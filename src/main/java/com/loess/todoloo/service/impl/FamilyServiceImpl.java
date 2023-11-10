@@ -66,7 +66,7 @@ public class FamilyServiceImpl implements FamilyService {
         User user = userService.getUserById(userId);
 
         //нет инвайта и не член семьи
-        if (inviteRepo.findMatch(userId, familyId).isEmpty() && !Objects.equals(user.getFamily(), family))
+        if (inviteRepo.findFirstByUserAndFamilyId(user, familyId).isEmpty() && !Objects.equals(user.getFamily(), family))
             throw new CustomException("You have no rights to view this family info", HttpStatus.FORBIDDEN);
 
         return mapper.convertValue(family, FamilyInfoResponse.class);
@@ -97,19 +97,23 @@ public class FamilyServiceImpl implements FamilyService {
             throw new CustomException("You cannot invite to Family you don't have!", HttpStatus.BAD_REQUEST);
         if (family.getOwner() != inviter)
             throw new CustomException("You are not owner of your family", HttpStatus.BAD_REQUEST);
+        Long familyId = family.getId();
+        if (inviteRepo.findFirstByUserAndFamilyId(user, familyId).isPresent()) //already invited
+            return true;
+
         Invite invite = new Invite();
         invite.setFamilyId(family.getId());
-        invite.setUserId(user.getId());
+        invite.setUser(user);
         inviteRepo.save(invite);
         return true;
     }
 
     @Override
     public Boolean joinByInvite(Long userId, Long familyId) {
-        Invite invite = inviteRepo.findMatch(userId, familyId)
+        User user = userService.getUserById(userId);
+        Invite invite = inviteRepo.findFirstByUserAndFamilyId(user, familyId)
                 .orElseThrow(() -> new CustomException("You have no invitation", HttpStatus.FORBIDDEN));
 
-        User user = userService.getUserById(userId);
         if (user.getFamily() != null)
             throw new CustomException("Leave your current family first!", HttpStatus.BAD_REQUEST);
 

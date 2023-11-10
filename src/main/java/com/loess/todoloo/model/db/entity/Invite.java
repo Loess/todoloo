@@ -21,6 +21,9 @@ public class Invite {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     Long familyId;
-    Long userId;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    User user;
 
 }
