@@ -1,5 +1,6 @@
 package com.loess.todoloo.model.db.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "invites")
+@Table(name = "notifications")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Notification {
 
@@ -20,10 +21,12 @@ public class Notification {
     Long id;
 
     String message;
+    String summary;
     LocalDateTime creationTime;
     LocalDateTime deliveredTime;
 
     @ManyToOne
+    @JsonIgnore //stop recursion
     @JoinColumn(name = "user_id") //использщовать этот столбец для связи с User
     User user;
 

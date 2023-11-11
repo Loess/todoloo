@@ -11,6 +11,7 @@ import com.loess.todoloo.model.dto.request.FamilyInfoRequest;
 import com.loess.todoloo.model.dto.response.FamilyInfoResponse;
 import com.loess.todoloo.model.enums.Role;
 import com.loess.todoloo.service.FamilyService;
+import com.loess.todoloo.service.NotificationService;
 import com.loess.todoloo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class FamilyServiceImpl implements FamilyService {
     private final InviteRepo inviteRepo;
     private final ObjectMapper mapper;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     @Override
     public FamilyInfoResponse createFamily(Long userId, FamilyInfoRequest request) {
@@ -105,6 +107,8 @@ public class FamilyServiceImpl implements FamilyService {
         invite.setFamilyId(family.getId());
         invite.setUser(user);
         inviteRepo.save(invite);
+        notificationService.createNotification(user,"Вы приглашены в семью " + family.getName(),
+                inviter.getName() + " пригласил Вас в семью " + family.getName() + ". Присоединиться, или отклонить приглашение.");
         return true;
     }
 

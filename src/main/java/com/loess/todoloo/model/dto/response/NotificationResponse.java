@@ -1,5 +1,6 @@
 package com.loess.todoloo.model.dto.response;
 
+import com.loess.todoloo.model.db.entity.User;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
@@ -15,10 +16,11 @@ import java.time.LocalDateTime;
 public class NotificationResponse {
 
     Long id;
-    LocalDateTime creation_date;
-    Long for_user;
+    LocalDateTime creationTime;
+    LocalDateTime deliveredTime;
+    User user;
     String summary;
-    String text;
-    Boolean delivered;
+    String message;
+
 
 }
