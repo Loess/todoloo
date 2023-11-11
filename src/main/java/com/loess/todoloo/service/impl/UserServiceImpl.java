@@ -15,8 +15,6 @@ import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -45,9 +43,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUserById(Long userId) {
-        if (userId == null || userId == 0) return null;
         return userRepo.findById(userId).orElseThrow(
                 () -> new CustomException("no user with id " + userId + " found", HttpStatus.BAD_REQUEST));
+    }
+
+    @Override
+    public User getUserByIdNullable(Long userId) {
+        if (userId == null || userId <= 0) return null;
+        return getUserById(userId);
     }
 
     @Override
@@ -63,7 +66,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserInfoResponse getUserInfoById(Long userId, Long id) {
         //check family rights
-        if ((!userId.equals(id)) && (getUserById(userId).getFamily() != getUserById(id).getFamily())) {
+        if ((!userId.equals(id)) && (getUserById(userId).getFamily() != getUserById(id).getFamily()) ||
+                (!userId.equals(id) && getUserById(userId).getFamily() == null)
+        ) {
             throw new CustomException("User is not in your family", HttpStatus.FORBIDDEN);
         }
         UserInfoResponse userInfoResponse = mapper.convertValue(getUserById(id), UserInfoResponse.class);
@@ -74,7 +79,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserInfoResponse getUserInfoByIdNullable(Long userId, Long id) {
         //check family rights
-        if ((!userId.equals(id)) && (getUserById(userId).getFamily() != getUserById(id).getFamily())) {
+        if ((!userId.equals(id)) && (getUserById(userId).getFamily() != getUserById(id).getFamily()) ||
+                (!userId.equals(id) && getUserById(userId).getFamily() == null)
+        ) {
             log.warn("User is not in your family in getUserInfoById({}, {})", userId, id);
             return null;
             // при стандартном пути заведения таски это не понадобится, т.к. нет возможности указать автора не из семьи
@@ -88,7 +95,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserInfoResponse editUser(Long userId, Long id, UserInfoRequest request) {
-        //todo: check rights
+        //todo: check rights - edit only self or family p->k
         User user = getUserById(id);
 
         String email = request.getEmail();
@@ -104,9 +111,9 @@ public class UserServiceImpl implements UserService {
         user.setPassword(StringUtils.isBlank(request.getPassword()) ? user.getPassword() : request.getPassword());
         user.setName(StringUtils.isBlank(request.getName()) ? user.getName() : request.getName());
 
-        //todo: check rights on family
+        //do not edit family. use familyService for join/leave
         //    String family;
-        //todo: check rights on role
+        //todo: check rights on role - edit only (self && family=null) or family p->k
         user.setRole(request.getRole() == null ? user.getRole() : request.getRole());
         User saved = userRepo.save(user);
 

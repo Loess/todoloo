@@ -10,6 +10,8 @@ public interface UserService {
 
     User getUserById(Long userId);
 
+    User getUserByIdNullable(Long userId);
+
     User getUserByEmail(String email);
 
     UserInfoResponse getUserInfoById(Long userId, Long id);

@@ -35,7 +35,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskInfoResponse createTask(Long userId, TaskInfoRequest request) {
         Task task = mapper.convertValue(request, Task.class);
         task.setAuthor(userService.getUserById(userId));
-        User assignee = userService.getUserById(request.getAssigneeId());
+        User assignee = userService.getUserByIdNullable(request.getAssigneeId());
         //проверка на семью и роль в assignee
         if (assignee != null && assignee != task.getAuthor() &&
                 !(task.getAuthor().getFamily() == assignee.getFamily() &&
@@ -78,8 +78,8 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public TaskInfoResponse changeTask(Long userId, Long taskId, TaskInfoRequest request) {
         Task task = taskRepo.findById(taskId).orElseThrow();
-        User assignee = userService.getUserById(request.getAssigneeId());
         User user = userService.getUserById(userId);
+        User assignee = userService.getUserByIdNullable(request.getAssigneeId());
         //только таски свои/семьи/родителю детёвые
         if ((task.getAuthor() != user) &&
                 (task.getAssignee() != user) &&
