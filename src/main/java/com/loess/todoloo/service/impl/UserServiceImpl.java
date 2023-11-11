@@ -1,5 +1,6 @@
 package com.loess.todoloo.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loess.todoloo.exceptions.CustomException;
 import com.loess.todoloo.model.db.entity.User;
 import com.loess.todoloo.model.db.repository.UserRepo;
@@ -7,13 +8,14 @@ import com.loess.todoloo.model.dto.request.UserInfoRequest;
 import com.loess.todoloo.model.dto.response.FamilyInfoResponse;
 import com.loess.todoloo.model.dto.response.UserInfoResponse;
 import com.loess.todoloo.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -61,13 +63,28 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserInfoResponse getUserInfoById(Long userId, Long id) {
         //check family rights
-        if (getUserById(userId).getFamily() != getUserById(id).getFamily())
+        if ((!userId.equals(id)) && (getUserById(userId).getFamily() != getUserById(id).getFamily())) {
             throw new CustomException("User is not in your family", HttpStatus.FORBIDDEN);
-
+        }
         UserInfoResponse userInfoResponse = mapper.convertValue(getUserById(id), UserInfoResponse.class);
         userInfoResponse.setFamily(mapper.convertValue(getUserById(id).getFamily(), FamilyInfoResponse.class));
         return userInfoResponse;
     }
+
+    @Override
+    public UserInfoResponse getUserInfoByIdNullable(Long userId, Long id) {
+        //check family rights
+        if ((!userId.equals(id)) && (getUserById(userId).getFamily() != getUserById(id).getFamily())) {
+            log.warn("User is not in your family in getUserInfoById({}, {})", userId, id);
+            return null;
+            // при стандартном пути заведения таски это не понадобится, т.к. нет возможности указать автора не из семьи
+            // но при выходе автора из семьи - задачи вышедших авторов - недоступны, 403 при запросе списка
+        }
+        UserInfoResponse userInfoResponse = mapper.convertValue(getUserById(id), UserInfoResponse.class);
+        userInfoResponse.setFamily(mapper.convertValue(getUserById(id).getFamily(), FamilyInfoResponse.class));
+        return userInfoResponse;
+    }
+
 
     @Override
     public UserInfoResponse editUser(Long userId, Long id, UserInfoRequest request) {
@@ -75,11 +92,11 @@ public class UserServiceImpl implements UserService {
         User user = getUserById(id);
 
         String email = request.getEmail();
-        if (StringUtils.isBlank(email) || email.equals(user.getEmail()) ) {
+        if (StringUtils.isBlank(email) || email.equals(user.getEmail())) {
             email = user.getEmail();
         } else if (!EmailValidator.getInstance().isValid(email)) {
             throw new CustomException("Invalid email", HttpStatus.BAD_REQUEST);
-        } else if (userRepo.findByEmail(email).isPresent()){
+        } else if (userRepo.findByEmail(email).isPresent()) {
             throw new CustomException("User with email " + email + " already exists", HttpStatus.BAD_REQUEST);
         }
         user.setEmail(email);

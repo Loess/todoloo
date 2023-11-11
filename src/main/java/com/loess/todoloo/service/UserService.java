@@ -1,11 +1,8 @@
 package com.loess.todoloo.service;
 
-import com.loess.todoloo.model.db.entity.Family;
 import com.loess.todoloo.model.db.entity.User;
 import com.loess.todoloo.model.dto.request.UserInfoRequest;
 import com.loess.todoloo.model.dto.response.UserInfoResponse;
-
-import java.util.List;
 
 public interface UserService {
 
@@ -16,6 +13,8 @@ public interface UserService {
     User getUserByEmail(String email);
 
     UserInfoResponse getUserInfoById(Long userId, Long id);
+
+    UserInfoResponse getUserInfoByIdNullable(Long userId, Long id);
 
     UserInfoResponse editUser(Long userId, Long id, UserInfoRequest request);
 

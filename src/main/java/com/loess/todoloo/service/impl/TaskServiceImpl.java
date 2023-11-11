@@ -126,12 +126,23 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public List<TaskInfoResponse> getMyTasks(Long userId) {
+        return getMyFamilyTasks(userId, userId);
+    }
+
+    @Override
+    public List<TaskInfoResponse> getMyFamilyTasks(Long userId, Long familyMemberId) {
         //todo: фильтр, сортировка, поиск по автору
-//        return taskRepo.findAll().stream()
-//                //.filter(task -> task.getStatus() != TaskStatus.CLOSED && task.getStatus() != TaskStatus.DONE) //плохо, надо фильтровать в БД
-//                .map(task -> mapper.convertValue(task, TaskInfoResponse.class))
-//                .collect(Collectors.toList());
-        List<TaskInfoResponse> collect = taskRepo.findAllByAssigneeId(userId).stream()
+
+        User user = userService.getUserById(userId);
+        User userWatched = userService.getUserById(familyMemberId);
+        //отдавать только таски свои/семьи/родителю детёвые
+        if (user.getFamily() == null && !userId.equals(familyMemberId)) // нет семьи, смотрит другого
+            throw new CustomException("You have no rights to view tasks of this user", HttpStatus.FORBIDDEN);
+        else if (!userId.equals(familyMemberId) && //смотрит другого
+                !(user.getFamily() == userWatched.getFamily() && user.getRole() == Role.PARENT && userWatched.getRole() == Role.KID))
+            throw new CustomException("You have no rights to view tasks of this user", HttpStatus.FORBIDDEN);
+
+        List<TaskInfoResponse> collect = taskRepo.findAllByAssigneeId(familyMemberId).stream()
                 .map(task -> mapper.convertValue(task, TaskInfoResponse.class))
                 .map(taskInfoResponse -> {
                     return addUserNamesToTaskInfoResponse(userId, taskInfoResponse);
@@ -140,31 +151,21 @@ public class TaskServiceImpl implements TaskService {
         return collect;
     }
 
-    @Override
-    public List<TaskInfoResponse> getMyFamilyTasks(Long userId, Long familyMemberId) {
-        //todo: фильтр, сортировка
-
-        User user = userService.getUserById(userId);
-        User userWatched = userService.getUserById(familyMemberId);
-        //отдавать только таски свои/семьи/родителю детёвые
-        if (!userId.equals(familyMemberId) &&
-                !(user.getFamily() == userWatched.getFamily() && user.getRole() == Role.PARENT && userWatched.getRole() == Role.KID))
-            throw new CustomException("You have no rights to view tasks of this user", HttpStatus.FORBIDDEN);
-
-        return null;
-    }
-
     private TaskInfoResponse addUserNamesToTaskInfoResponse(Long userId, TaskInfoResponse taskInfoResponse) {
         UserInfoResponse author = taskInfoResponse.getAuthor();
         if (author != null) {
-            UserInfoResponse auth = userService.getUserInfoById(userId, author.getId());
-            author.setName(auth.getName());
+            UserInfoResponse auth = userService.getUserInfoByIdNullable(userId, author.getId());
+            if (auth != null) {
+                author.setName(auth.getName());
+            }
             taskInfoResponse.setAuthor(author);
         }
         UserInfoResponse assignee = taskInfoResponse.getAssignee();
         if (assignee != null) {
-            UserInfoResponse ass = userService.getUserInfoById(userId, assignee.getId());
-            assignee.setName(ass.getName());
+            UserInfoResponse ass = userService.getUserInfoByIdNullable(userId, assignee.getId());
+            if (ass != null) {
+                assignee.setName(ass.getName());
+            }
             taskInfoResponse.setAssignee(assignee);
         }
         return taskInfoResponse;
