@@ -1,7 +1,5 @@
 package com.loess.todoloo.model.dto.response;
 
-import com.loess.todoloo.model.db.entity.Family;
-import com.loess.todoloo.model.dto.request.UserInfoRequest;
 import com.loess.todoloo.model.enums.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

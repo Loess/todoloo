@@ -1,9 +1,6 @@
 package com.loess.todoloo.model.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.loess.todoloo.model.db.entity.User;
 import com.loess.todoloo.model.enums.TaskStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

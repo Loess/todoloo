@@ -109,7 +109,7 @@ public class TaskServiceImpl implements TaskService {
             task.setStatusDate(LocalDateTime.now());
             task.setStatus(TaskStatus.DRAFT);
         }
-        //ToDo: Status workflow и выполнение задач + награда или отдельный метод
+        //ToDo: Status workflow и выполнение задач + награда или отдельный метод!
         task.setNeedVerify(request.getNeedVerify());
         task.setSummary(request.getSummary());
         task.setDescription(request.getDescription());
@@ -126,7 +126,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public List<TaskInfoResponse> getMyTasks(Long userId) {
-        //todo: фильтр, сортировка
+        //todo: фильтр, сортировка, поиск по автору
 //        return taskRepo.findAll().stream()
 //                //.filter(task -> task.getStatus() != TaskStatus.CLOSED && task.getStatus() != TaskStatus.DONE) //плохо, надо фильтровать в БД
 //                .map(task -> mapper.convertValue(task, TaskInfoResponse.class))
