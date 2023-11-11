@@ -22,7 +22,6 @@ public class TaskInfoRequest {
     Boolean needVerify;
     String summary;
     String description;
-    @JsonIgnore
     Long assigneeId;
     String textReward;
     Integer rewardAmount;

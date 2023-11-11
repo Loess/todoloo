@@ -22,9 +22,16 @@ public class Task {
     Long id;
 
     @ManyToOne
-    @JsonBackReference(value = "author_tasks")
-    @JsonIgnore // Исключить поле из маппинга, иначе Cannot construct instance of `com.loess.todoloo.model.db.entity.User` (although at least one Creator exists): no long/Long-argument constructor/factory method to deserialize from Number value (0)
+    @JoinColumn(name = "author_id") //использовать этот столбец для связи с User
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     User author;
+
+    @ManyToOne
+    @JoinColumn(name = "assignee_id") //использовать этот столбец для связи с User
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    User assignee;
 
     //@Column(name = "creation_date")
     LocalDateTime creationDate;
@@ -37,10 +44,6 @@ public class Task {
     String summary;
     String description;
 
-    @ManyToOne
-    @JsonBackReference(value = "assigned_tasks")
-    @JsonIgnore // Исключить поле из маппинга
-    User assignee;
     String textReward;
     Integer rewardAmount;
     Integer priority;

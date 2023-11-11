@@ -43,7 +43,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUserById(Long userId) {
-        if (userId == null || userId == 0) return new User();
+        if (userId == null || userId == 0) return null;
         return userRepo.findById(userId).orElseThrow(
                 () -> new CustomException("no user with id " + userId + " found", HttpStatus.BAD_REQUEST));
     }

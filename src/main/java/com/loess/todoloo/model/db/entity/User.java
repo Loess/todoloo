@@ -36,14 +36,10 @@ public class User {
     @JsonBackReference(value = "family_members")
     Family family;
 
-    @OneToMany
-    @JsonManagedReference(value = "author_tasks")
-    @JsonIgnore // Исключить поле из маппинга
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL) //ссылаемся на поле author entity Task
     List<Task> authorOf;
 
-    @OneToMany
-    @JsonManagedReference(value = "assigned_tasks")
-    @JsonIgnore // Исключить поле из маппинга
+    @OneToMany(mappedBy = "assignee", cascade = CascadeType.ALL) //ссылаемся на поле assignee entity Task
     List<Task> assignedTo;
 
     //mappedBy связывает с полем user в классе Notification.

@@ -5,9 +5,10 @@ import com.loess.todoloo.exceptions.CustomException;
 import com.loess.todoloo.model.db.entity.Task;
 import com.loess.todoloo.model.db.entity.User;
 import com.loess.todoloo.model.db.repository.TaskRepo;
-import com.loess.todoloo.model.db.repository.UserRepo;
 import com.loess.todoloo.model.dto.request.TaskInfoRequest;
 import com.loess.todoloo.model.dto.response.TaskInfoResponse;
+import com.loess.todoloo.model.dto.response.UserInfoResponse;
+import com.loess.todoloo.model.enums.Role;
 import com.loess.todoloo.model.enums.TaskStatus;
 import com.loess.todoloo.service.TaskService;
 import com.loess.todoloo.service.UserService;
@@ -19,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,7 +35,14 @@ public class TaskServiceImpl implements TaskService {
     public TaskInfoResponse createTask(Long userId, TaskInfoRequest request) {
         Task task = mapper.convertValue(request, Task.class);
         task.setAuthor(userService.getUserById(userId));
-        task.setAssignee(userService.getUserById(request.getAssigneeId()));
+        User assignee = userService.getUserById(request.getAssigneeId());
+        //проверка на семью и роль в assignee
+        if (assignee != null && assignee != task.getAuthor() &&
+                !(task.getAuthor().getFamily() == assignee.getFamily() &&
+                        task.getAuthor().getRole() == Role.PARENT && assignee.getRole() == Role.KID))
+            throw new CustomException("You cannot assign task to this user", HttpStatus.BAD_REQUEST);
+
+        task.setAssignee(assignee);
         task.setCreationDate(LocalDateTime.now());
         task.setStatusDate(LocalDateTime.now());
         if (StringUtils.isBlank(task.getSummary())) {
@@ -43,23 +50,54 @@ public class TaskServiceImpl implements TaskService {
         }
 
         Task saved = taskRepo.save(task);
-        return mapper.convertValue(saved, TaskInfoResponse.class);
+        return addUserNamesToTaskInfoResponse(userId, mapper.convertValue(saved, TaskInfoResponse.class));
     }
 
     @Override
     public TaskInfoResponse getTask(Long userId, Long taskId) {
-        //todo: отдавать только таски семьи/родителю детёвые
         Task task = taskRepo.findById(taskId)
                 .orElseThrow(() -> new CustomException("Task not found", HttpStatus.NOT_FOUND));
+        User user = userService.getUserById(userId);
+        //отдавать только таски свои/семьи/родителю детёвые
+        if ((task.getAuthor() != user) &&
+                (task.getAssignee() != user) &&
+                !(task.getAssignee() != null &&
+                        user.getFamily() == task.getAssignee().getFamily() &&
+                        user.getRole() == Role.PARENT &&
+                        task.getAssignee().getRole() == Role.KID) &&
+                !(task.getAuthor() != null &&
+                        user.getFamily() == task.getAuthor().getFamily() &&
+                        user.getRole() == Role.PARENT &&
+                        task.getAuthor().getRole() == Role.KID)
+        )
+            throw new CustomException("You have no rights to view this task", HttpStatus.FORBIDDEN);
 
-        return mapper.convertValue(task, TaskInfoResponse.class);
+        return addUserNamesToTaskInfoResponse(userId, mapper.convertValue(task, TaskInfoResponse.class));
     }
 
     @Override
     public TaskInfoResponse changeTask(Long userId, Long taskId, TaskInfoRequest request) {
-        //todo: давать только свои таски/родителю детёвые
         Task task = taskRepo.findById(taskId).orElseThrow();
         User assignee = userService.getUserById(request.getAssigneeId());
+        User user = userService.getUserById(userId);
+        //только таски свои/семьи/родителю детёвые
+        if ((task.getAuthor() != user) &&
+                (task.getAssignee() != user) &&
+                !(task.getAssignee() != null &&
+                        user.getFamily() == task.getAssignee().getFamily() &&
+                        user.getRole() == Role.PARENT &&
+                        task.getAssignee().getRole() == Role.KID) &&
+                !(task.getAuthor() != null &&
+                        user.getFamily() == task.getAuthor().getFamily() &&
+                        user.getRole() == Role.PARENT &&
+                        task.getAuthor().getRole() == Role.KID)
+        )
+            throw new CustomException("You have no rights to change this task", HttpStatus.FORBIDDEN);
+        //проверка на семью и роль в assignee
+        if (assignee != null && assignee != task.getAuthor() &&
+                !(task.getAuthor().getFamily() == assignee.getFamily() &&
+                        task.getAuthor().getRole() == Role.PARENT && assignee.getRole() == Role.KID))
+            throw new CustomException("You cannot assign task to this user", HttpStatus.BAD_REQUEST);
 
         if (StringUtils.isBlank(request.getSummary())) {
             throw new CustomException("Empty summary is not accepted", HttpStatus.BAD_REQUEST);
@@ -67,7 +105,11 @@ public class TaskServiceImpl implements TaskService {
         if (request.getStatus() != null && request.getStatus() != task.getStatus()) {
             task.setStatusDate(LocalDateTime.now());
             task.setStatus(request.getStatus());
+        } else if (request.getStatus() == null) {
+            task.setStatusDate(LocalDateTime.now());
+            task.setStatus(TaskStatus.DRAFT);
         }
+        //ToDo: Status workflow и выполнение задач + награда или отдельный метод
         task.setNeedVerify(request.getNeedVerify());
         task.setSummary(request.getSummary());
         task.setDescription(request.getDescription());
@@ -78,27 +120,54 @@ public class TaskServiceImpl implements TaskService {
         task.setPriority(request.getPriority() == null ? 0 : request.getPriority());
         task.setRightAnswers(request.getRightAnswers());
 
-        //спросить как быть, если мб пустые - делать обязательный датасет в TaskInfoRequest ?
-
         Task save = taskRepo.save(task);
         return mapper.convertValue(save, TaskInfoResponse.class);
     }
 
     @Override
     public List<TaskInfoResponse> getMyTasks(Long userId) {
-        //todo: давать только свои таски, фильтр, сортировка
+        //todo: фильтр, сортировка
 //        return taskRepo.findAll().stream()
 //                //.filter(task -> task.getStatus() != TaskStatus.CLOSED && task.getStatus() != TaskStatus.DONE) //плохо, надо фильтровать в БД
 //                .map(task -> mapper.convertValue(task, TaskInfoResponse.class))
 //                .collect(Collectors.toList());
-        return taskRepo.findAllByAssigneeId(userId).stream()
+        List<TaskInfoResponse> collect = taskRepo.findAllByAssigneeId(userId).stream()
                 .map(task -> mapper.convertValue(task, TaskInfoResponse.class))
+                .map(taskInfoResponse -> {
+                    return addUserNamesToTaskInfoResponse(userId, taskInfoResponse);
+                })
                 .collect(Collectors.toList());
+        return collect;
     }
 
     @Override
     public List<TaskInfoResponse> getMyFamilyTasks(Long userId, Long familyMemberId) {
-        //todo: давать только семейные таски/детей, фильтр, сортировка
+        //todo: фильтр, сортировка
+
+        User user = userService.getUserById(userId);
+        User userWatched = userService.getUserById(familyMemberId);
+        //отдавать только таски свои/семьи/родителю детёвые
+        if (!userId.equals(familyMemberId) &&
+                !(user.getFamily() == userWatched.getFamily() && user.getRole() == Role.PARENT && userWatched.getRole() == Role.KID))
+            throw new CustomException("You have no rights to view tasks of this user", HttpStatus.FORBIDDEN);
+
         return null;
     }
+
+    private TaskInfoResponse addUserNamesToTaskInfoResponse(Long userId, TaskInfoResponse taskInfoResponse) {
+        UserInfoResponse author = taskInfoResponse.getAuthor();
+        if (author != null) {
+            UserInfoResponse auth = userService.getUserInfoById(userId, author.getId());
+            author.setName(auth.getName());
+            taskInfoResponse.setAuthor(author);
+        }
+        UserInfoResponse assignee = taskInfoResponse.getAssignee();
+        if (assignee != null) {
+            UserInfoResponse ass = userService.getUserInfoById(userId, assignee.getId());
+            assignee.setName(ass.getName());
+            taskInfoResponse.setAssignee(assignee);
+        }
+        return taskInfoResponse;
+    }
+
 }

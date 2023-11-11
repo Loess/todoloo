@@ -15,6 +15,10 @@ import lombok.experimental.SuperBuilder;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserInfoResponse {
 
+    public UserInfoResponse(Long id) {
+        this.id = id;
+    }
+
     Long id;
     Integer rewardBalance;
     String email;
