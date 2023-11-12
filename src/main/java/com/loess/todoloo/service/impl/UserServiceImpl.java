@@ -7,6 +7,7 @@ import com.loess.todoloo.model.db.repository.UserRepo;
 import com.loess.todoloo.model.dto.request.UserInfoRequest;
 import com.loess.todoloo.model.dto.response.FamilyInfoResponse;
 import com.loess.todoloo.model.dto.response.UserInfoResponse;
+import com.loess.todoloo.model.enums.Role;
 import com.loess.todoloo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,6 @@ public class UserServiceImpl implements UserService {
         if (!EmailValidator.getInstance().isValid(email)) {
             throw new CustomException("Invalid email", HttpStatus.BAD_REQUEST);
         }
-
         userRepo.findByEmail(email).ifPresent(u -> {
             throw new CustomException("User with email " + email + " already exists", HttpStatus.BAD_REQUEST);
         });
@@ -95,8 +95,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserInfoResponse editUser(Long userId, Long id, UserInfoRequest request) {
-        //todo: check rights - edit only self or family p->k
         User user = getUserById(id);
+        //check rights - edit only self or family parent->kid
+        if (!userId.equals(id) &&
+                (!(getUserById(userId).getFamily() != null &&
+                        getUserById(userId).getFamily() == getUserById(id).getFamily() &&
+                        getUserById(userId).getRole() == Role.PARENT && getUserById(id).getRole() == Role.KID))) {
+            throw new CustomException("Invalid user edit attempt", HttpStatus.FORBIDDEN);
+        }
 
         String email = request.getEmail();
         if (StringUtils.isBlank(email) || email.equals(user.getEmail())) {
@@ -111,10 +117,19 @@ public class UserServiceImpl implements UserService {
         user.setPassword(StringUtils.isBlank(request.getPassword()) ? user.getPassword() : request.getPassword());
         user.setName(StringUtils.isBlank(request.getName()) ? user.getName() : request.getName());
 
-        //do not edit family. use familyService for join/leave
-        //    String family;
-        //todo: check rights on role - edit only (self && family=null) or family p->k
-        user.setRole(request.getRole() == null ? user.getRole() : request.getRole());
+        //    String family;        //do not edit family. use familyService for join/leave
+        if (request.getRole()!=null && !user.getRole().equals(request.getRole())) { //если меняем роль
+            // check rights on role - edit only (self && family=null) or family parent->kid
+            if ((userId.equals(id) && getUserById(userId).getFamily() == null) ||
+                    (getUserById(userId).getFamily() != null &&
+                            getUserById(userId).getFamily() == getUserById(id).getFamily() &&
+                            getUserById(userId).getRole() == Role.PARENT && getUserById(id).getRole() == Role.KID)) {
+                user.setRole(request.getRole());
+            } else {
+                throw new CustomException("You have no rights to change your role! Try exit family first", HttpStatus.FORBIDDEN);
+            }
+        }
+
         User saved = userRepo.save(user);
 
         return mapper.convertValue(user, UserInfoResponse.class);

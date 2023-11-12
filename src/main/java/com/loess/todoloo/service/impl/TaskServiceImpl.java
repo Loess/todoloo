@@ -136,10 +136,9 @@ public class TaskServiceImpl implements TaskService {
         User user = userService.getUserById(userId);
         User userWatched = userService.getUserById(familyMemberId);
         //отдавать только таски свои/семьи/родителю детёвые
-        if (user.getFamily() == null && !userId.equals(familyMemberId)) // нет семьи, смотрит другого
-            throw new CustomException("You have no rights to view tasks of this user", HttpStatus.FORBIDDEN);
-        else if (!userId.equals(familyMemberId) && //смотрит другого
-                !(user.getFamily() == userWatched.getFamily() && user.getRole() == Role.PARENT && userWatched.getRole() == Role.KID))
+        if ((user.getFamily() == null && !userId.equals(familyMemberId)) || // нет семьи, смотрит другого
+            (!userId.equals(familyMemberId) && //смотрит другого
+                !(user.getFamily() == userWatched.getFamily() && user.getRole() == Role.PARENT && userWatched.getRole() == Role.KID)))
             throw new CustomException("You have no rights to view tasks of this user", HttpStatus.FORBIDDEN);
 
         List<TaskInfoResponse> collect = taskRepo.findAllByAssigneeId(familyMemberId).stream()
