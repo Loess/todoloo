@@ -6,6 +6,7 @@ import com.loess.todoloo.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,14 +33,20 @@ public class TaskController {
 
     @GetMapping("/my")
     @Operation(summary = "Получить мои задачи")
-    public List<TaskInfoResponse> getMyTasks(@RequestHeader("userid") Long userId) {
-        return taskService.getMyTasks(userId);
+    public List<TaskInfoResponse> getMyTasks(@RequestHeader("userid") Long userId,
+                                             @RequestParam(defaultValue = "priority") String sortBy,
+                                             @RequestParam(defaultValue = "ASC") String sortOrder
+                                             ) {
+        return taskService.getMyTasks(userId,sortBy,sortOrder);
     }
 
     @GetMapping("/myFamily/{familyMemberId}")
     @Operation(summary = "Получить задачи пользователя из моей семьи")
-    public List<TaskInfoResponse> getMyTasks(@RequestHeader("userid") Long userId, @PathVariable Long familyMemberId) {
-        return taskService.getMyFamilyTasks(userId,familyMemberId);
+    public List<TaskInfoResponse> getMyTasks(@RequestHeader("userid") Long userId,
+                                             @PathVariable Long familyMemberId,
+                                             @RequestParam(defaultValue = "priority") String sortBy,
+                                             @RequestParam(defaultValue = "ASC") String sortOrder) {
+        return taskService.getMyFamilyTasks(userId,familyMemberId,sortBy,sortOrder);
     }
 
     @PatchMapping("/change/{taskId}")

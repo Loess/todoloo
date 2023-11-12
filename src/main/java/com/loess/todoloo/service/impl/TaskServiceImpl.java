@@ -15,6 +15,7 @@ import com.loess.todoloo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -125,13 +126,13 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public List<TaskInfoResponse> getMyTasks(Long userId) {
-        return getMyFamilyTasks(userId, userId);
+    public List<TaskInfoResponse> getMyTasks(Long userId, String sortBy, String sortOrder) {
+        return getMyFamilyTasks(userId, userId, sortBy, sortOrder);
     }
 
     @Override
-    public List<TaskInfoResponse> getMyFamilyTasks(Long userId, Long familyMemberId) {
-        //todo: фильтр, сортировка, поиск по автору
+    public List<TaskInfoResponse> getMyFamilyTasks(Long userId, Long familyMemberId, String sortBy, String sortOrder) {
+        //todo: фильтр, пагинация?
 
         User user = userService.getUserById(userId);
         User userWatched = userService.getUserById(familyMemberId);
@@ -141,13 +142,34 @@ public class TaskServiceImpl implements TaskService {
                 !(user.getFamily() == userWatched.getFamily() && user.getRole() == Role.PARENT && userWatched.getRole() == Role.KID)))
             throw new CustomException("You have no rights to view tasks of this user", HttpStatus.FORBIDDEN);
 
-        List<TaskInfoResponse> collect = taskRepo.findAllByAssigneeId(familyMemberId).stream()
+        Sort sort = getSort(sortBy, sortOrder);
+        List<Task> tasks = taskRepo.findAllByAssigneeId(familyMemberId, sort);
+
+        List<TaskInfoResponse> collect = tasks.stream()
                 .map(task -> mapper.convertValue(task, TaskInfoResponse.class))
                 .map(taskInfoResponse -> {
                     return addUserNamesToTaskInfoResponse(userId, taskInfoResponse);
                 })
                 .collect(Collectors.toList());
         return collect;
+    }
+
+    private Sort getSort(String sortBy, String sortOrder) {
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortOrder) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        switch (sortBy.toLowerCase()) {
+            case "creationdate":
+                return Sort.by(direction, "creationDate");
+            case "priority":
+                return Sort.by(direction, "priority");
+            case "rewardamount":
+                return Sort.by(direction, "rewardAmount");
+            case "author":
+                return Sort.by(direction, "author");
+            case "status":
+                return Sort.by(direction, "status");
+            default:
+                return Sort.by(direction, "priority");
+        }
     }
 
     private TaskInfoResponse addUserNamesToTaskInfoResponse(Long userId, TaskInfoResponse taskInfoResponse) {

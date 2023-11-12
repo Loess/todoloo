@@ -14,7 +14,8 @@ public interface TaskService {
 
     TaskInfoResponse changeTask(Long userId, Long taskId, TaskInfoRequest request);
 
-    List<TaskInfoResponse> getMyTasks(Long userId);
+    List<TaskInfoResponse> getMyTasks(Long userId, String sortBy, String sortOrder);
 
-    List<TaskInfoResponse> getMyFamilyTasks(Long userId, Long familyMemberId);
+    List<TaskInfoResponse> getMyFamilyTasks(Long userId, Long familyMemberId, String sortBy, String sortOrder);
+
 }
