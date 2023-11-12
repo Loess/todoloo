@@ -10,6 +10,7 @@ import com.loess.todoloo.model.dto.response.TaskInfoResponse;
 import com.loess.todoloo.model.dto.response.UserInfoResponse;
 import com.loess.todoloo.model.enums.Role;
 import com.loess.todoloo.model.enums.TaskStatus;
+import com.loess.todoloo.service.NotificationService;
 import com.loess.todoloo.service.TaskService;
 import com.loess.todoloo.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class TaskServiceImpl implements TaskService {
     private final ObjectMapper mapper;
     private final TaskRepo taskRepo;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     @Override
     public TaskInfoResponse createTask(Long userId, TaskInfoRequest request) {
@@ -78,7 +80,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskInfoResponse changeTask(Long userId, Long taskId, TaskInfoRequest request) {
-        Task task = taskRepo.findById(taskId).orElseThrow();
+        Task task = taskRepo.findById(taskId).orElseThrow(() -> new CustomException("Task not found", HttpStatus.NOT_FOUND));
         User user = userService.getUserById(userId);
         User assignee = userService.getUserByIdNullable(request.getAssigneeId());
         //только таски свои/семьи/родителю детёвые
@@ -110,7 +112,7 @@ public class TaskServiceImpl implements TaskService {
             task.setStatusDate(LocalDateTime.now());
             task.setStatus(TaskStatus.DRAFT);
         }
-        //ToDo: Status workflow и выполнение задач + награда или отдельный метод!
+
         task.setNeedVerify(request.getNeedVerify());
         task.setSummary(request.getSummary());
         task.setDescription(request.getDescription());
@@ -122,7 +124,58 @@ public class TaskServiceImpl implements TaskService {
         task.setRightAnswers(request.getRightAnswers());
 
         Task save = taskRepo.save(task);
-        return mapper.convertValue(save, TaskInfoResponse.class);
+        return addUserNamesToTaskInfoResponse(userId, mapper.convertValue(save, TaskInfoResponse.class));
+    }
+
+    private boolean checkAnswer(String answer, String validAnswers) {
+        if (answer == null || validAnswers == null) return false;
+        String[] answersArray = validAnswers.split("\\r?\\n");
+        for (String line : answersArray) {
+            if (line.trim().equals(answer.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //Status workflow и выполнение задач + награда
+    @Override
+    public TaskInfoResponse finishTask(Long userId, Long taskId, TaskInfoRequest request) {
+        Task task = taskRepo.findById(taskId).orElseThrow(() -> new CustomException("Task not found", HttpStatus.NOT_FOUND));
+        User user = userService.getUserById(userId);
+        //check rights
+        if (!user.equals(task.getAssignee()) && !user.equals(task.getAuthor()))
+            throw new CustomException("You cannot finish this task", HttpStatus.FORBIDDEN);
+        if (!task.getStatus().equals(TaskStatus.OPENED) && !task.getStatus().equals(TaskStatus.IN_REVIEW))
+            throw new CustomException("You cannot finish this task because of wrong status. Task should be OPENED or IN_REVIEW", HttpStatus.FORBIDDEN);
+        if (task.getAssignee() == null || task.getAuthor() == null)
+            throw new CustomException("You cannot finish this task. Set assignee and author first", HttpStatus.BAD_REQUEST);
+
+        if (!StringUtils.isBlank(task.getRightAnswers()) && task.getStatus().equals(TaskStatus.OPENED) &&
+                checkAnswer(request.getRightAnswers(), task.getRightAnswers())) { //есть нужные ответы
+            task.setStatus(TaskStatus.DONE);
+            if (task.getAssignee().getRewardBalance() != null) {
+                task.getAssignee().setRewardBalance(task.getAssignee().getRewardBalance() + task.getRewardAmount());
+            } else {
+                task.getAssignee().setRewardBalance(task.getRewardAmount());
+            }
+        } else if (Boolean.TRUE.equals(request.getNeedVerify()) && task.getAssignee().getRole().equals(Role.KID)) {
+            task.setStatus(TaskStatus.IN_REVIEW);
+            //send notif
+            notificationService.createNotification(task.getAuthor(),
+                    "Проверьте выполнение задачи",
+                    "Проверьте выполнение задачи " + task.getSummary());
+        } else if (Boolean.TRUE.equals(request.getNeedVerify()) && task.getAssignee().getRole().equals(Role.PARENT)) {
+            task.setStatus(TaskStatus.DONE);
+            task.getAssignee().setRewardBalance(task.getAssignee().getRewardBalance() + task.getRewardAmount());
+        }
+
+        Task saved = taskRepo.save(task);
+
+        if (task.getStatus().equals(TaskStatus.DONE)) {
+            userService.updateUser(task.getAssignee());
+        }
+        return addUserNamesToTaskInfoResponse(userId, mapper.convertValue(saved, TaskInfoResponse.class));
     }
 
     @Override
@@ -138,8 +191,8 @@ public class TaskServiceImpl implements TaskService {
         User userWatched = userService.getUserById(familyMemberId);
         //отдавать только таски свои/семьи/родителю детёвые
         if ((user.getFamily() == null && !userId.equals(familyMemberId)) || // нет семьи, смотрит другого
-            (!userId.equals(familyMemberId) && //смотрит другого
-                !(user.getFamily() == userWatched.getFamily() && user.getRole() == Role.PARENT && userWatched.getRole() == Role.KID)))
+                (!userId.equals(familyMemberId) && //смотрит другого
+                        !(user.getFamily() == userWatched.getFamily() && user.getRole() == Role.PARENT && userWatched.getRole() == Role.KID)))
             throw new CustomException("You have no rights to view tasks of this user", HttpStatus.FORBIDDEN);
 
         Sort sort = getSort(sortBy, sortOrder);
@@ -157,11 +210,11 @@ public class TaskServiceImpl implements TaskService {
     private Sort getSort(String sortBy, String sortOrder) {
         Sort.Direction direction = "asc".equalsIgnoreCase(sortOrder) ? Sort.Direction.ASC : Sort.Direction.DESC;
         switch (sortBy.toLowerCase()) {
-            case "creationdate":
+            case "date":
                 return Sort.by(direction, "creationDate");
             case "priority":
                 return Sort.by(direction, "priority");
-            case "rewardamount":
+            case "reward":
                 return Sort.by(direction, "rewardAmount");
             case "author":
                 return Sort.by(direction, "author");

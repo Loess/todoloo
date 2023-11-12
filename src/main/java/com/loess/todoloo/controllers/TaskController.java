@@ -6,7 +6,6 @@ import com.loess.todoloo.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,13 +21,13 @@ public class TaskController {
     @PostMapping("/new")
     @Operation(summary = "Создать новую задачу")
     public TaskInfoResponse createTask(@RequestHeader("userid") Long userId, @RequestBody TaskInfoRequest request) {
-        return taskService.createTask(userId,request);
+        return taskService.createTask(userId, request);
     }
 
     @GetMapping("/{taskId}")
     @Operation(summary = "Получить описание задачи")
     public TaskInfoResponse getTask(@RequestHeader("userid") Long userId, @PathVariable Long taskId) {
-        return taskService.getTask(userId,taskId);
+        return taskService.getTask(userId, taskId);
     }
 
     @GetMapping("/my")
@@ -36,8 +35,8 @@ public class TaskController {
     public List<TaskInfoResponse> getMyTasks(@RequestHeader("userid") Long userId,
                                              @RequestParam(defaultValue = "priority") String sortBy,
                                              @RequestParam(defaultValue = "ASC") String sortOrder
-                                             ) {
-        return taskService.getMyTasks(userId,sortBy,sortOrder);
+    ) {
+        return taskService.getMyTasks(userId, sortBy, sortOrder);
     }
 
     @GetMapping("/myFamily/{familyMemberId}")
@@ -46,7 +45,7 @@ public class TaskController {
                                              @PathVariable Long familyMemberId,
                                              @RequestParam(defaultValue = "priority") String sortBy,
                                              @RequestParam(defaultValue = "ASC") String sortOrder) {
-        return taskService.getMyFamilyTasks(userId,familyMemberId,sortBy,sortOrder);
+        return taskService.getMyFamilyTasks(userId, familyMemberId, sortBy, sortOrder);
     }
 
     @PatchMapping("/change/{taskId}")
@@ -55,6 +54,14 @@ public class TaskController {
                                        @PathVariable Long taskId,
                                        @RequestBody TaskInfoRequest request) {
         return taskService.changeTask(userId, taskId, request);
+    }
+
+    @PatchMapping("/finish/{taskId}")
+    @Operation(summary = "Выполнить задачу")
+    public TaskInfoResponse finishTask(@RequestHeader("userid") Long userId,
+                                       @PathVariable Long taskId,
+                                       @RequestBody TaskInfoRequest request) {
+        return taskService.finishTask(userId, taskId, request);
     }
 
 }
