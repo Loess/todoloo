@@ -20,6 +20,6 @@ public interface UserService {
 
     UserInfoResponse editUser(Long userId, Long id, UserInfoRequest request);
 
-    User updateFamily(User user);
+    User updateUser(User user);
 
 }

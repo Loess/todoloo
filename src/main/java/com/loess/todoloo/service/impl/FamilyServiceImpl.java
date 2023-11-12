@@ -52,7 +52,7 @@ public class FamilyServiceImpl implements FamilyService {
         Family saved = familyRepo.save(family);
 
         user.setFamily(saved);
-        userService.updateFamily(user);
+        userService.updateUser(user);
 
         FamilyInfoResponse response = mapper.convertValue(saved, FamilyInfoResponse.class);
         response.setOwnerId(userId);
@@ -126,7 +126,7 @@ public class FamilyServiceImpl implements FamilyService {
 
         family.getMembers().add(user);
         user.setFamily(family);
-        userService.updateFamily(user);
+        userService.updateUser(user);
         familyRepo.save(family);
         inviteRepo.delete(invite);
 
@@ -143,12 +143,12 @@ public class FamilyServiceImpl implements FamilyService {
         Family family = user.getFamily();
         if (family.getOwner() == user && family.getMembers().size() == 1) {
             user.setFamily(null);
-            userService.updateFamily(user);
+            userService.updateUser(user);
             familyRepo.delete(family);
             log.info("family" + family.getId() + " deleted");
         } else {
             user.setFamily(null);
-            userService.updateFamily(user);
+            userService.updateUser(user);
             if (!family.getMembers().remove(user))
                 throw new CustomException("Unknown error! You are not in family", HttpStatus.BAD_REQUEST);
             familyRepo.save(family);

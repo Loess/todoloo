@@ -92,7 +92,6 @@ public class UserServiceImpl implements UserService {
         return userInfoResponse;
     }
 
-
     @Override
     public UserInfoResponse editUser(Long userId, Long id, UserInfoRequest request) {
         User user = getUserById(id);
@@ -118,7 +117,7 @@ public class UserServiceImpl implements UserService {
         user.setName(StringUtils.isBlank(request.getName()) ? user.getName() : request.getName());
 
         //    String family;        //do not edit family. use familyService for join/leave
-        if (request.getRole()!=null && !user.getRole().equals(request.getRole())) { //если меняем роль
+        if (request.getRole() != null && !user.getRole().equals(request.getRole())) { //если меняем роль
             // check rights on role - edit only (self && family=null) or family parent->kid
             if ((userId.equals(id) && getUserById(userId).getFamily() == null) ||
                     (getUserById(userId).getFamily() != null &&
@@ -132,11 +131,11 @@ public class UserServiceImpl implements UserService {
 
         User saved = userRepo.save(user);
 
-        return mapper.convertValue(user, UserInfoResponse.class);
+        return mapper.convertValue(saved, UserInfoResponse.class);
     }
 
     @Override
-    public User updateFamily(User user) {
+    public User updateUser(User user) {
         return userRepo.save(user);
     }
 
