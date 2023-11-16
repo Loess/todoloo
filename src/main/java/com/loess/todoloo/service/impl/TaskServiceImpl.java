@@ -1,6 +1,7 @@
 package com.loess.todoloo.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.loess.todoloo.exceptions.CustomException;
 import com.loess.todoloo.model.db.entity.Task;
 import com.loess.todoloo.model.db.entity.User;
@@ -53,6 +54,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         Task saved = taskRepo.save(task);
+        mapper.registerModule(new JavaTimeModule()); // для тестов
         return addUserNamesToTaskInfoResponse(userId, mapper.convertValue(saved, TaskInfoResponse.class));
     }
 
@@ -124,6 +126,7 @@ public class TaskServiceImpl implements TaskService {
         task.setRightAnswers(request.getRightAnswers());
 
         Task save = taskRepo.save(task);
+        mapper.registerModule(new JavaTimeModule()); // для тестов
         return addUserNamesToTaskInfoResponse(userId, mapper.convertValue(save, TaskInfoResponse.class));
     }
 
@@ -159,13 +162,13 @@ public class TaskServiceImpl implements TaskService {
             } else {
                 task.getAssignee().setRewardBalance(task.getRewardAmount());
             }
-        } else if (Boolean.TRUE.equals(request.getNeedVerify()) && task.getAssignee().getRole().equals(Role.KID)) {
+        } else if (Boolean.TRUE.equals(task.getNeedVerify()) && task.getAssignee().getRole().equals(Role.KID)) {
             task.setStatus(TaskStatus.IN_REVIEW);
             //send notif
             notificationService.createNotification(task.getAuthor(),
                     "Проверьте выполнение задачи",
                     "Проверьте выполнение задачи " + task.getSummary());
-        } else if (Boolean.TRUE.equals(request.getNeedVerify()) && task.getAssignee().getRole().equals(Role.PARENT)) {
+        } else if (Boolean.TRUE.equals(task.getNeedVerify()) && task.getAssignee().getRole().equals(Role.PARENT)) {
             task.setStatus(TaskStatus.DONE);
             task.getAssignee().setRewardBalance(task.getAssignee().getRewardBalance() + task.getRewardAmount());
         }
@@ -175,6 +178,7 @@ public class TaskServiceImpl implements TaskService {
         if (task.getStatus().equals(TaskStatus.DONE)) {
             userService.updateUser(task.getAssignee());
         }
+        mapper.registerModule(new JavaTimeModule()); // для тестов
         return addUserNamesToTaskInfoResponse(userId, mapper.convertValue(saved, TaskInfoResponse.class));
     }
 

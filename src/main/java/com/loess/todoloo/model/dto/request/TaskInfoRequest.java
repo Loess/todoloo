@@ -1,5 +1,6 @@
 package com.loess.todoloo.model.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.loess.todoloo.model.enums.TaskStatus;
 import lombok.*;
@@ -19,6 +20,7 @@ public class TaskInfoRequest {
     Boolean needVerify;
     String summary;
     String description;
+    @JsonIgnore
     Long assigneeId;
     String textReward;
     Integer rewardAmount;
