@@ -19,8 +19,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,8 +41,6 @@ public class FamilyServiceImplTest {
     private UserService userService;
     @Mock
     private NotificationService notificationService;
-    @Mock
-    private Logger log;
 
     @Spy
     private ObjectMapper mapper;

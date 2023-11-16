@@ -1,6 +1,7 @@
 package com.loess.todoloo.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.loess.todoloo.exceptions.CustomException;
 import com.loess.todoloo.model.db.entity.Reward;
 import com.loess.todoloo.model.db.entity.User;
@@ -84,7 +85,7 @@ public class RewardServiceImpl implements RewardService {
         Reward reward = new Reward();
         reward.setAssignee(assignee);
         reward.setSummary(request.getSummary());
-        if (!request.getRewardPrice().equals(0) && user.getFamily() != null && assignee.getRole() == Role.KID) {
+        if (!request.getRewardPrice().equals(0) && user.getFamily() != null && user.getRole() == Role.KID) {
             throw new CustomException("You have no rights to set reward amount", HttpStatus.FORBIDDEN);
         } else {
             reward.setRewardPrice(request.getRewardPrice());
@@ -132,6 +133,7 @@ public class RewardServiceImpl implements RewardService {
         reward.setFinishedDate(Boolean.TRUE.equals(request.getFinished()) ? LocalDateTime.now() : null);
         Reward savedReward = rewardRepo.save(reward);
 
+        mapper.registerModule(new JavaTimeModule()); // для тестов
         RewardInfoResponse response = mapper.convertValue(savedReward, RewardInfoResponse.class);
         response.setAssigneeId(savedReward.getAssignee().getId());
 
@@ -153,6 +155,7 @@ public class RewardServiceImpl implements RewardService {
 
         userService.updateUser(assignee);
         Reward saved = rewardRepo.save(rew);
+        mapper.registerModule(new JavaTimeModule()); // для тестов
         RewardInfoResponse response = mapper.convertValue(saved, RewardInfoResponse.class);
         response.setAssigneeId(saved.getAssignee().getId());
         return response;
