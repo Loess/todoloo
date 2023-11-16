@@ -2,14 +2,14 @@ package com.loess.todoloo.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loess.todoloo.model.db.entity.Notification;
+import com.loess.todoloo.model.db.entity.User;
+import com.loess.todoloo.model.db.repository.NotificationRepo;
 import com.loess.todoloo.model.dto.response.NotificationResponse;
 import com.loess.todoloo.service.UserService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import com.loess.todoloo.model.db.repository.NotificationRepo;
-import com.loess.todoloo.model.db.entity.User;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 
