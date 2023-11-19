@@ -18,7 +18,7 @@ public class TaskController {
 
     private final TaskService taskService;
 
-    @PostMapping("/new")
+    @PutMapping("/new")
     @Operation(summary = "Создать новую задачу")
     public TaskInfoResponse createTask(@RequestHeader("userid") Long userId, @RequestBody TaskInfoRequest request) {
         return taskService.createTask(userId, request);

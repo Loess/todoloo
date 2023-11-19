@@ -21,7 +21,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping("/new")
+    @PutMapping("/new")
     @Operation(summary = "Создать нового пользователя")
     public UserInfoResponse createUser(@RequestBody UserInfoRequest request) {
         return userService.createUser(request);

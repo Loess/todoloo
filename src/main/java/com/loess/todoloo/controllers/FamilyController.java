@@ -19,7 +19,7 @@ public class FamilyController {
 
     private final FamilyService familyService;
 
-    @PostMapping("/new")
+    @PutMapping("/new")
     @Operation(summary = "Создать новую семью")
     public FamilyInfoResponse createFamily(@RequestHeader("userid") Long userId, @RequestBody FamilyInfoRequest request) {
         return familyService.createFamily(userId,request);
