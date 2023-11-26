@@ -3,6 +3,7 @@ package com.loess.todoloo.config;
 import com.loess.todoloo.model.auth.filters.CustomAuthenticationFilter;
 import com.loess.todoloo.model.auth.filters.CustomAuthorizationFilter;
 import com.loess.todoloo.model.enums.Role;
+import com.loess.todoloo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -82,6 +83,7 @@ public class SecurityConfig {
     public static class RestConfiguration extends WebSecurityConfigurerAdapter {
 
         private final UserDetailsService userDetailsService;
+        private final UserService userService;
         private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
         @Override
@@ -98,7 +100,8 @@ public class SecurityConfig {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
 
-            CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(authenticationManager());
+            CustomAuthenticationFilter customAuthenticationFilter =
+                    new CustomAuthenticationFilter(authenticationManager(),userService);
             customAuthenticationFilter.setFilterProcessesUrl("/api/login");
             customAuthenticationFilter.setFilterProcessesUrl("/api/register");
             customAuthenticationFilter.setFilterProcessesUrl("/api/token/refresh");

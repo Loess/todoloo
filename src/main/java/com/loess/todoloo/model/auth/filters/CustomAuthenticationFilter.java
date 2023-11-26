@@ -1,5 +1,6 @@
 package com.loess.todoloo.model.auth.filters;
 
+import com.loess.todoloo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,9 +19,10 @@ import static com.loess.todoloo.utils.AuthUtils.getTokensJson;
 @Slf4j
 @RequiredArgsConstructor
 public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
-	
+
 	private final AuthenticationManager manager;
-	
+	private final UserService userService;
+
 	@Override
 	public Authentication attemptAuthentication(HttpServletRequest request,
 			HttpServletResponse response) throws AuthenticationException {
@@ -38,6 +40,6 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 			HttpServletResponse response, FilterChain chain,
 			Authentication authentication) {
 		User user = (User)authentication.getPrincipal();
-		getTokensJson(user);
+		getTokensJson(user, userService.getUserByEmail(user.getUsername()).getId());
 	}
 }

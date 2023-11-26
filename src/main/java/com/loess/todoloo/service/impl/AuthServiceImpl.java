@@ -47,7 +47,7 @@ public class AuthServiceImpl implements AuthService {
         if (!passwordEncoder.matches(form.getPassword(), user.getPassword())) {
             throw new CustomException("wrong password!", HttpStatus.UNAUTHORIZED);
         }
-        return getTokensJson(user);
+        return getTokensJson(user, userService.getUserByEmail(user.getUsername()).getId());
 
     }
 
@@ -56,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
         if (refreshToken != null && refreshToken.startsWith("Bearer ")) {
                 User user = userService.getUser(
                         EncodingUtil.getDecodedUsername("secret", refreshToken));
-                return getTokensJson(user);
+                return getTokensJson(user, userService.getUserByEmail(user.getUsername()).getId());
 
         } else {
             throw new CustomException("Refresh token is missing", HttpStatus.UNAUTHORIZED);

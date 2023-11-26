@@ -42,7 +42,7 @@ public class AuthUtils {
         new ObjectMapper().writeValue(response.getOutputStream(), error);
     }
 
-    public static TokenDto getTokensJson(UserDetails user) {
+    public static TokenDto getTokensJson(UserDetails user, Long userid) {
         Algorithm algorithm = EncodingUtil.getAlgorithm("secret");
 
         Date accessExpiresAt = new Date(System.currentTimeMillis() + 120 * 60 * 1000);
@@ -54,7 +54,7 @@ public class AuthUtils {
                         .stream()
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.toList()))
-
+                .withClaim("userid", userid)
                 .sign(algorithm);
 
         Date refreshExpiresAt = new Date(System.currentTimeMillis() + 180 * 60 * 1000);
