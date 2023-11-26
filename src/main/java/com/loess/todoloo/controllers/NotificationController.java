@@ -3,6 +3,7 @@ package com.loess.todoloo.controllers;
 import com.loess.todoloo.model.dto.response.NotificationResponse;
 import com.loess.todoloo.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/notifications")
 @RequiredArgsConstructor //конструктор для инъекции сервиса
+@SecurityRequirement(name = "Authorization")
 public class NotificationController {
 
     private final NotificationService notificationService;

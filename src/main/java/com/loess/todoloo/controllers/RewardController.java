@@ -4,6 +4,7 @@ import com.loess.todoloo.model.dto.request.RewardInfoRequest;
 import com.loess.todoloo.model.dto.response.RewardInfoResponse;
 import com.loess.todoloo.service.RewardService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/rewards")
 @RequiredArgsConstructor //конструктор для инъекции сервиса
+@SecurityRequirement(name = "Authorization")
 public class RewardController {
 
     private final RewardService rewardService;

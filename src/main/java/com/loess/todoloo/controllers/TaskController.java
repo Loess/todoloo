@@ -4,6 +4,9 @@ import com.loess.todoloo.model.dto.request.TaskInfoRequest;
 import com.loess.todoloo.model.dto.response.TaskInfoResponse;
 import com.loess.todoloo.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/tasks")
 @RequiredArgsConstructor //конструктор для инъекции сервиса
+@SecurityRequirement(name = "Authorization")
 public class TaskController {
 
     private final TaskService taskService;

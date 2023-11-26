@@ -7,6 +7,9 @@ import com.loess.todoloo.model.dto.response.UserInfoResponse;
 import com.loess.todoloo.service.TaskService;
 import com.loess.todoloo.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor //конструктор для инъекции сервиса
+@SecurityScheme(type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT", name = "Authorization")
 public class UserController {
 
     private final UserService userService;
@@ -28,13 +32,13 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Получить инфо о пользователе")
+    @Operation(summary = "Получить инфо о пользователе", security = @SecurityRequirement(name = "Authorization"))
     public UserInfoResponse getUser(@RequestHeader("userid") Long userId, @PathVariable Long id) {
         return userService.getUserInfoById(userId,id);
     }
 
     @PostMapping("/{id}")
-    @Operation(summary = "Редактировать пользователя")
+    @Operation(summary = "Редактировать пользователя", security = @SecurityRequirement(name = "Authorization"))
     public UserInfoResponse editUser(@RequestHeader("userid") Long userId, @PathVariable Long id, @RequestBody UserInfoRequest request) {
         return userService.editUser(userId,id,request);
     }
