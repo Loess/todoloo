@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import static com.loess.todoloo.utils.AuthUtils.extractUserIdFromToken;
+
 @Tag(name = "Семьи")
 @RestController
 @RequestMapping("/family")
@@ -23,39 +25,39 @@ public class FamilyController {
 
     @PutMapping("/new")
     @Operation(summary = "Создать новую семью")
-    public FamilyInfoResponse createFamily(@RequestHeader("userid") Long userId, @RequestBody FamilyInfoRequest request) {
-        return familyService.createFamily(userId,request);
+    public FamilyInfoResponse createFamily(@RequestHeader("Authorization") String token, @RequestBody FamilyInfoRequest request) {
+        return familyService.createFamily(extractUserIdFromToken(token), request);
     }
 
     @Operation(summary = "Получить инфо по ID")
     @GetMapping("/{familyId}")
-    public FamilyInfoResponse getFamilyInfo(@RequestHeader("userid") Long userId, @PathVariable Long familyId) {
-        return familyService.getFamilyInfo(userId, familyId);
+    public FamilyInfoResponse getFamilyInfo(@RequestHeader("Authorization") String token, @PathVariable Long familyId) {
+        return familyService.getFamilyInfo(extractUserIdFromToken(token), familyId);
     }
 
     @Operation(summary = "Изменить название или владельца семьи")
     @PatchMapping("/change")
-    public FamilyInfoResponse getFamilyInfo(@RequestHeader("userid") Long userId,
+    public FamilyInfoResponse getFamilyInfo(@RequestHeader("Authorization") String token,
                                             @RequestBody FamilyInfoRequest request) {
-        return familyService.changeFamily(userId, request);
+        return familyService.changeFamily(extractUserIdFromToken(token), request);
     }
 
     @Operation(summary = "Пригласить пользователя по email")
     @PostMapping("/invite")
-    public Boolean inviteByEmail(@RequestHeader("userid") Long userId, @RequestBody String email) {
-        return familyService.inviteByEmail(userId, email);
+    public Boolean inviteByEmail(@RequestHeader("Authorization") String token, @RequestBody String email) {
+        return familyService.inviteByEmail(extractUserIdFromToken(token), email);
     }
 
     @Operation(summary = "Присоединиться по приглашению")
     @PostMapping("/join/{familyId}")
-    public Boolean joinByInvite(@RequestHeader("userid") Long userId, @PathVariable Long familyId) {
-        return familyService.joinByInvite(userId, familyId);
+    public Boolean joinByInvite(@RequestHeader("Authorization") String token, @PathVariable Long familyId) {
+        return familyService.joinByInvite(extractUserIdFromToken(token), familyId);
     }
 
     @Operation(summary = "Выйти из семьи")
     @PostMapping("/leave")
-    public Boolean leaveFamily(@RequestHeader("userid") Long userId) {
-        return familyService.leaveFamily(userId);
+    public Boolean leaveFamily(@RequestHeader("Authorization") String token) {
+        return familyService.leaveFamily(extractUserIdFromToken(token));
     }
 
 }

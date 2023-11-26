@@ -2,12 +2,11 @@ package com.loess.todoloo.utils;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.loess.todoloo.model.auth.TokenDto;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.loess.todoloo.service.UserService;
+import com.loess.todoloo.model.auth.TokenDto;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,7 +28,6 @@ public class AuthUtils {
      *
      * @param response the {@link HttpServletResponse} response
      * @param e        the Exception value
-     *
      * @throws IOException if an input or output exception occurred
      */
     public static void sendAuthError(HttpServletResponse response, Exception e) throws
@@ -70,6 +68,11 @@ public class AuthUtils {
                 .refreshToken(refreshToken)
                 .refreshTokenTTL(refreshExpiresAt.toInstant())
                 .build();
+    }
+
+    public static Long extractUserIdFromToken(String token) {
+        DecodedJWT jwt = JWT.decode(token.replace("Bearer ", ""));
+        return jwt.getClaim("userid").asLong();
     }
 
 }

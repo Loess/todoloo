@@ -15,26 +15,26 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@Tag(name = "Authentication")
+@Tag(name = "Аутентификация")
 public class AuthController {
 
     private final AuthService authService;
 
     @GetMapping("/token/refresh")
-    @Operation(summary = "Refresh token")
+    @Operation(summary = "Обновить токен")
     public TokenDto refreshToken(@RequestHeader("refresh-token") String refreshToken) {
         return authService.refreshToken(refreshToken);
     }
 
     @PostMapping("/login")
-    @Operation(summary = "User authentication")
+    @Operation(summary = "Логин")
     public TokenDto login(@RequestBody AuthenticationForm form) {
 
         return authService.login(form);
     }
 
     @PostMapping(value = "/register")
-    @Operation(summary = "User registration")
+    @Operation(summary = "Регистрация нового пользователя")
     public TokenDto register(@RequestBody UserInfoRequest form) {
 
         return authService.register(form);
