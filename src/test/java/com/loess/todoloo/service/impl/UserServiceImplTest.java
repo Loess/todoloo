@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Optional;
 
@@ -308,5 +309,24 @@ public class UserServiceImplTest {
         assertEquals("valid@example.com", response.getEmail());
         assertEquals(Role.PARENT, response.getRole());
         verify(userRepo, times(1)).save(any(User.class));
+    }
+
+
+    @Test
+    public void loadUserByUsername() {
+        String email = "test@example.com";
+        User mockedUser = new User();
+        mockedUser.setEmail(email);
+        mockedUser.setPassword("hashedPassword");
+        mockedUser.setRole(Role.KID);
+
+        when(userRepo.findByEmail(anyString())).thenReturn(Optional.of(mockedUser));
+
+        UserDetails userDetails = userService.loadUserByUsername(email);
+
+        assertNotNull(userDetails);
+        assertEquals(email, userDetails.getUsername());
+        assertEquals("hashedPassword", userDetails.getPassword());
+        assertEquals(1, userDetails.getAuthorities().size());
     }
 }
