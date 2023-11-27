@@ -24,9 +24,6 @@ import static com.loess.todoloo.utils.AuthUtils.getTokensJson;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    /**
-     * User service class
-     */
     private final UserService userService;
 
     /**
@@ -43,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
                         form.getPassword());
 
         manager.authenticate(token);
-        User user = userService.getUser(form.getUsername());
+        User user = userService.getUserByEmail(form.getUsername());
         if (!passwordEncoder.matches(form.getPassword(), user.getPassword())) {
             throw new CustomException("wrong password!", HttpStatus.UNAUTHORIZED);
         }
@@ -54,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokenDto refreshToken(String refreshToken) {
         if (refreshToken != null && refreshToken.startsWith("Bearer ")) {
-                User user = userService.getUser(
+                User user = userService.getUserByEmail(
                         EncodingUtil.getDecodedUsername("secret", refreshToken));
                 return getTokensJson(user, userService.getUserByEmail(user.getUsername()).getId());
 

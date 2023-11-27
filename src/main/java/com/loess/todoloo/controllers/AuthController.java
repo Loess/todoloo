@@ -33,7 +33,7 @@ public class AuthController {
         return authService.login(form);
     }
 
-    @PostMapping(value = "/register")
+    @PutMapping(value = "/register")
     @Operation(summary = "Регистрация нового пользователя")
     public TokenDto register(@RequestBody UserInfoRequest form) {
 

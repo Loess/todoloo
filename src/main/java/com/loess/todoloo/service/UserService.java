@@ -22,6 +22,4 @@ public interface UserService {
 
     User updateUser(User user);
 
-    User getUser(String email);
-
 }

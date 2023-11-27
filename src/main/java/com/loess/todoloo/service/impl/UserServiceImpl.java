@@ -157,9 +157,4 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 user.getPassword(), authorities);
     }
 
-    @Override
-    public User getUser(String email) {
-        return userRepo.findByEmail(email)
-                .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
-    }
 }

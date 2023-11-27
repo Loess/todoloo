@@ -1,6 +1,7 @@
 package com.loess.todoloo.model.db.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.loess.todoloo.model.enums.Role;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -52,6 +53,7 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     List<Invite> invites;
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new GrantedAuthority() {
